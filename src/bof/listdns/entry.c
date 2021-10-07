@@ -1,6 +1,6 @@
-
-#include "bofdefs.h"
+#include <windows.h>
 #include <windns.h>
+#include "bofdefs.h"
 #include "base.c"
 
 typedef struct _DNS_CACHE_ENTRY {

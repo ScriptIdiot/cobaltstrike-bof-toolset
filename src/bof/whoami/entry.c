@@ -6,11 +6,11 @@
  * PROGRAMMERS: Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
-
-#include "bofdefs.h"
+#include <windows.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <sddl.h>
+#include "bofdefs.h"
 #include "base.c"
 
 

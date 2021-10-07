@@ -1,5 +1,6 @@
-#include "bofdefs.h"
+#include <windows.h>
 #include <iphlpapi.h>
+#include "bofdefs.h"
 #include "base.c"
 
 BOOL ALL = TRUE;

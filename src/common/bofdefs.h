@@ -1,6 +1,5 @@
 #pragma once
 #pragma intrinsic(memcmp, memcpy,strcpy,strcmp,strlen)
-#include <winsock2.h>
 #include <windows.h>
 #include <process.h>
 #include <winternl.h>
@@ -15,7 +14,6 @@
 #include <wtsapi32.h>
 #include <shlwapi.h>
 #include <wlanapi.h>
-#include <ws2tcpip.h>
 #include <wininet.h>
 
 //KERNEL32
@@ -116,18 +114,8 @@ DECLSPEC_IMPORT ULONG WINAPI IPHLPAPI$GetUdpTable (PMIB_UDPTABLE UdpTable, PULON
 DECLSPEC_IMPORT ULONG WINAPI IPHLPAPI$GetTcpTable (PMIB_TCPTABLE TcpTable, PULONG SizePointer, WINBOOL Order);
 DECLSPEC_IMPORT ULONG WINAPI IPHLPAPI$GetIpNetTable(PMIB_IPNETTABLE IpNetTable,PULONG SizePointer, BOOL Order);
 
-//ws2_32 socket
-DECLSPEC_IMPORT INT WINAPI Ws2_32$WSAGetLastError();
-DECLSPEC_IMPORT INT WSAAPI Ws2_32$getaddrinfo(PCSTR,PCSTR, const ADDRINFOA*, PADDRINFOA*);
-DECLSPEC_IMPORT SOCKET WSAAPI Ws2_32$socket(INT,INT,INT);
-DECLSPEC_IMPORT INT WSAAPI Ws2_32$connect(SOCKET, const SOCKADDR*, INT);
-DECLSPEC_IMPORT INT WINAPI Ws2_32$closesocket();
-DECLSPEC_IMPORT VOID WSAAPI Ws2_32$freeaddrinfo(PADDRINFOA);
-DECLSPEC_IMPORT INT WSAAPI Ws2_32$WSACleanup();
-DECLSPEC_IMPORT INT WSAAPI Ws2_32$WSAStartup(WORD,LPWSADATA);
-DECLSPEC_IMPORT INT WSAAPI Ws2_32$closesocket(IN SOCKET);
-
 //MSVCRT
+WINBASEAPI char *__cdecl MSVCRT$_ultoa(unsigned long _Value,char *_Dest,int _Radix);
 WINBASEAPI void *__cdecl MSVCRT$calloc(size_t _NumOfElements, size_t _SizeOfElements);
 WINBASEAPI void *__cdecl MSVCRT$memcpy(void * __restrict__ _Dst,const void * __restrict__ _Src,size_t _MaxCount);
 WINBASEAPI int __cdecl MSVCRT$memcmp(const void *_Buf1,const void *_Buf2,size_t _Size);

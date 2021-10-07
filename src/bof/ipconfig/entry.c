@@ -1,5 +1,7 @@
-#include "bofdefs.h"
+
+#include <windows.h>
 #include <iphlpapi.h>
+#include "bofdefs.h"
 #include "base.c"
 
 typedef  DWORD (*getadaptinfo)(LPVOID, PULONG);

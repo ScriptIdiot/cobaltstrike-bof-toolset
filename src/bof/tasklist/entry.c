@@ -1,3 +1,6 @@
+#include <windows.h>
+#include <stdio.h>
+#include "beacon.h"
 #include "bofdefs.h"
 #include "base.c"
 #include "wmi.c"
@@ -70,6 +73,7 @@ HRESULT task_list(
 			ppbstrResults[dwCurrentRowIndex][RESULTS_COMMANDLINE_COL]
 		);
 	}
+	hr = S_OK;
 
 fail:
 

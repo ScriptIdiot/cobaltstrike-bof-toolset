@@ -1,6 +1,6 @@
-
-#include "bofdefs.h"
+#include <windows.h>
 #include <process.h>
+#include "bofdefs.h"
 #include "base.c"
 #include "anticrash.c"
 #include "stack.c"

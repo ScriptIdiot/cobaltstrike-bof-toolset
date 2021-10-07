@@ -172,7 +172,12 @@ typedef int WINAPI (*StringFromGUID2_t)(REFGUID rguid, LPOLESTR lpsz, int cchMax
 		CRYPT32$CertFreeCertificateChain(cert_chain_context); \
 		cert_chain_context = NULL; \
 	}	
-
+#define SAFE_CERTFREECERTIFICATE( cert ) \
+	if(cert) \
+	{ \
+		CRYPT32$CertFreeCertificateContext(cert); \
+		cert = NULL; \
+	}	
 
 #define DEFINE_MY_GUID(name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) const GUID name = { l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } }
 DEFINE_MY_GUID(CertificateEnrollment,0x0e10c968,0x78fb,0x11d2,0x90,0xd4,0x00,0xc0,0x4f,0x79,0xdc,0x55);
@@ -268,10 +273,10 @@ HRESULT _adcs_get_CertConfig()
 
 fail:
 
+	SAFE_FREE(bstrFieldConfig);
 	SAFE_FREE(bstrFieldWebEnrollmentServers);
 	SAFE_FREE(bstrConfig);
-	SAFE_FREE(bstrFieldConfig);
-	SAFE_FREE(bstrConfig);
+	SAFE_FREE(bstrWebEnrollmentServers);
 	SAFE_RELEASE(pCertConfig);
 	
 	return hr;
@@ -288,11 +293,11 @@ HRESULT _adcs_get_CertRequest(BSTR bstrConfig)
 	CLSID	CLSID_CCertRequest = { 0x98AFF3F0, 0x5524, 0x11D0, {0x88, 0x12, 0x00, 0xA0, 0xC9, 0x03, 0xB8, 0x3C} };
 	IID		IID_ICertRequest2 = { 0xA4772988, 0x4A85, 0x4FA9, {0x82, 0x4E, 0xB5, 0xCF, 0x5C, 0x16, 0x40, 0x5A} };
 
+	OLEAUT32$VariantInit(&varProperty);
+
 	SAFE_RELEASE(pCertRequest);
 	hr = OLE32$CoCreateInstance(&CLSID_CCertRequest, 0, CLSCTX_INPROC_SERVER, &IID_ICertRequest2, (LPVOID *)&(pCertRequest));
 	CHECK_RETURN_FAIL("CoCreateInstance(CLSID_CCertRequest)", hr);
-
-	OLEAUT32$VariantInit(&varProperty);
 
 	hr = pCertRequest->lpVtbl->GetCAProperty(pCertRequest, bstrConfig, CR_PROP_CANAME, 0, PROPTYPE_STRING, 0, &varProperty);
 	CHECK_RETURN_FAIL("pCertRequest->lpVtbl->GetCAProperty(CR_PROP_CANAME)", hr);
@@ -303,7 +308,6 @@ HRESULT _adcs_get_CertRequest(BSTR bstrConfig)
 	CHECK_RETURN_FAIL("pCertRequest->lpVtbl->GetCAProperty(CR_PROP_DNSNAME)", hr);
 	internal_printf("    DNS Hostname             : %S\n", varProperty.bstrVal);
 	OLEAUT32$VariantClear(&varProperty);
-
 	internal_printf("    FullName                 : %S\n", bstrConfig);
 
 	hr = pCertRequest->lpVtbl->GetCACertificate(pCertRequest, FALSE, bstrConfig, CR_OUT_BINARY,	&bstrCertificate );
@@ -442,6 +446,10 @@ HRESULT _adcs_get_Certificate(BSTR bstrCertificate)
 	//internal_printf("\n _adcs_get_Certificate SUCCESS.\n");
 
 fail:
+	SAFE_CERTFREECERTIFICATE (pCert);
+	SAFE_CERTFREECERTIFICATECHAIN (pCertChainContext);
+	SAFE_INT_FREE(lpThumbprint);
+	SAFE_INT_FREE(swzNameString);
 
 	return hr;
 } // end _adcs_get_Certificate
@@ -674,7 +682,7 @@ HRESULT _adcs_get_Template(BSTR bstrOID)
 fail:
 
 	OLEAUT32$VariantClear(&varProperty);
-	//SAFE_RELEASE(pTemplate);
+	SAFE_RELEASE(pTemplate);
 	SAFE_RELEASE(pPkcs);
 
 	return hr;
@@ -695,7 +703,8 @@ HRESULT _adcs_get_TemplateExtendedKeyUsages(VARIANT* lpvarExtendedKeyUsages)
 
 	IID IID_IEnumVARIANT = { 0x00020404, 0x0000, 0x0000, {0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46} };
 	IID IID_IObjectId = { 0x728ab300, 0x217d, 0x11da, {0XB2, 0XA4, 0x00, 0x0E, 0x7B, 0xBB, 0x2B, 0x09} };
-	
+
+	OLEAUT32$VariantInit(&var);
 	if (NULL == lpvarExtendedKeyUsages->pdispVal)
 	{
 		internal_printf("      N/A\n");
@@ -722,7 +731,10 @@ HRESULT _adcs_get_TemplateExtendedKeyUsages(VARIANT* lpvarExtendedKeyUsages)
 				&bstFriendlyName
 			);
 			if (FAILED(hr))	{ internal_printf("      N/A\n"); }
-			else { internal_printf("      %S\n", bstFriendlyName); }
+			else { 
+				internal_printf("      %S\n", bstFriendlyName); 
+				SAFE_FREE(bstFriendlyName);
+			}
 
 			SAFE_RELEASE(pObjectId);
 		}
