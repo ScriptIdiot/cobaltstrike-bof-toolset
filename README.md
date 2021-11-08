@@ -1,5 +1,7 @@
 ### 简介
-收集网络中在cobaltstrike中使用的bof工具集。项目基于CS-Situational-Awareness-BOF推荐的创建方式和流程。代码均来之网络。
+收集网络中在cobaltstrike中使用的bof工具集。主要收集零散项目，项目基于CS-Situational-Awareness-BOF推荐的创建方式和流程。代码均来之网络。
+本项目中不包含CS-Situational-Awareness-BOF项目内容，此项目更新活跃，建议单独下载编译使用https://github.com/trustedsec/CS-Situational-Awareness-BOF。
+结合本项目一起使用。
 
 ### 直接使用
 ```
